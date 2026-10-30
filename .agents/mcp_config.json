@@ -1,0 +1,36 @@
+{
+  "mcpServers": {
+    "student-management": {
+      "command": "node",
+      "args": [
+        "./mcp-server/index.js"
+      ],
+      "env": {
+        "API_BASE_URL": "https://three-tier-student-management-system.onrender.com/api"
+      },
+      "description": "MongoDB & Student Management System operations (create, list, get, update, delete students in MongoDB Atlas)"
+    },
+    "github": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-github"
+      ],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": ""
+      },
+      "description": "Official GitHub MCP server for repository, branch, commit, and release operations"
+    },
+    "vercel": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "vercel-platform-mcp-server"
+      ],
+      "env": {
+        "VERCEL_TOKEN": ""
+      },
+      "description": "Vercel MCP server for deployments, project settings, domains, and environment variables"
+    }
+  }
+}

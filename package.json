@@ -1,0 +1,17 @@
+{
+  "name": "three-tier-student-management-system",
+  "version": "1.0.0",
+  "description": "Three-Tier Student Management System with MCP Server",
+  "private": true,
+  "scripts": {
+    "test": "npm run test --prefix server && npm run test --prefix client && npm run test --prefix mcp-server",
+    "test:server": "npm run test --prefix server",
+    "test:client": "npm run test --prefix client",
+    "test:mcp": "npm run test --prefix mcp-server",
+    "build:client": "npm run build --prefix client",
+    "build": "npm run build --prefix client",
+    "start:server": "npm start --prefix server",
+    "start:client": "npm run dev --prefix client",
+    "start:mcp": "npm start --prefix mcp-server"
+  }
+}

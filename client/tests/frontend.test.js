@@ -1,6 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { getInitials, getAvatarGradient, formatRelativeTime } from '../src/utils/avatarHelper.js';
+import { getApiBase } from '../src/api.js';
 
 describe('Frontend Social UI Utility Test Suite', () => {
   describe('Avatar & Initials Generation', () => {
@@ -78,6 +79,35 @@ describe('Frontend Social UI Utility Test Suite', () => {
 
       const sortedDesc = [...mockStudents].sort((a, b) => b.name.localeCompare(a.name));
       assert.equal(sortedDesc[0].name, 'Saim Niyazi');
+    });
+  });
+
+  describe('API URL Resolution & Resilience', () => {
+    it('falls back to /api when env var is empty or undefined', () => {
+      assert.equal(getApiBase(''), '/api');
+      assert.equal(getApiBase(undefined), '/api');
+    });
+
+    it('falls back to /api when env var is a bare service ID (preventing HTTP 405)', () => {
+      assert.equal(getApiBase('srv-dbi6ni942hec73ck71n0'), '/api');
+    });
+
+    it('prepends https:// when domain is supplied without protocol', () => {
+      assert.equal(
+        getApiBase('three-tier-student-management-system.onrender.com'),
+        'https://three-tier-student-management-system.onrender.com/api'
+      );
+    });
+
+    it('preserves full https URL and appends /api suffix if missing', () => {
+      assert.equal(
+        getApiBase('https://three-tier-student-management-system.onrender.com'),
+        'https://three-tier-student-management-system.onrender.com/api'
+      );
+      assert.equal(
+        getApiBase('https://three-tier-student-management-system.onrender.com/api'),
+        'https://three-tier-student-management-system.onrender.com/api'
+      );
     });
   });
 });

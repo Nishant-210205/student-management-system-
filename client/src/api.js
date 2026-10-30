@@ -2,9 +2,28 @@
 // Priority:
 // 1. import.meta.env.VITE_API_BASE_URL (if configured on Vercel or locally)
 // 2. Relative '/api' (proxied via vercel.json rewrite in production or vite.config.js in development)
-// Automatically normalizes trailing slashes and ensures '/api' suffix if missing
-const getApiBase = () => {
-  const envUrl = (import.meta.env.VITE_API_BASE_URL || '/api').trim().replace(/\/+$/, '');
+// Automatically validates URLs, normalizes trailing slashes, and ensures resilience against misconfigured env vars
+export const getApiBase = (
+  rawEnvUrl = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env.VITE_API_BASE_URL : undefined
+) => {
+  let envUrl = (rawEnvUrl || '').trim().replace(/\/+$/, '');
+
+  // If empty or explicitly '/api', use relative '/api'
+  if (!envUrl || envUrl === '/api') {
+    return '/api';
+  }
+
+  // If user passed a bare hostname (e.g. "three-tier-student-management-system.onrender.com"), prepend https://
+  if (/^[a-zA-Z0-9-]+\.[a-zA-Z]{2,}/.test(envUrl)) {
+    envUrl = `https://${envUrl}`;
+  }
+
+  // If not a valid absolute URL (http:// or https://) or valid leading slash (/), fall back safely to '/api'
+  if (!envUrl.startsWith('http://') && !envUrl.startsWith('https://') && !envUrl.startsWith('/')) {
+    console.warn(`[API] Invalid VITE_API_BASE_URL ("${envUrl}"). Falling back to relative /api.`);
+    return '/api';
+  }
+
   return envUrl.endsWith('/api') ? envUrl : `${envUrl}/api`;
 };
 
@@ -22,6 +41,11 @@ const handleResponse = async (response) => {
     const errorMsg = data.message || `Request failed with status ${response.status}`;
     throw new Error(errorMsg);
   }
+
+  if (!contentType.includes('application/json')) {
+    throw new Error(`Expected JSON response from API, but received ${contentType || 'non-JSON content'}.`);
+  }
+
   return data;
 };
 

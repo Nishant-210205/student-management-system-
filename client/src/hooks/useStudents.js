@@ -13,7 +13,11 @@ export const useStudents = (search = '') => {
   const checkHealth = useCallback(async () => {
     try {
       const data = await api.checkHealth();
-      setDbStatus(data.database || 'connected');
+      if (data && data.database) {
+        setDbStatus(data.database);
+      } else {
+        setDbStatus('disconnected');
+      }
     } catch {
       setDbStatus('disconnected');
     }

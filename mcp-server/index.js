@@ -1,5 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { SSEServerTransport } from '@modelcontextprotocol/sdk/server/sse.js';
+import http from 'http';
 import { z } from 'zod';
 import dotenv from 'dotenv';
 import path from 'path';
@@ -222,11 +224,169 @@ server.tool(
   }
 );
 
-// Start server using stdio transport
+// Tool 6: search_students
+server.tool(
+  'search_students',
+  'Search student records in MongoDB Atlas by name, student ID, or department keyword',
+  {
+    query: z.string().min(1).describe('Search query keyword to match against student name, student ID, or department'),
+    department: z.string().optional().describe('Optional department filter to narrow search'),
+  },
+  async ({ query, department }) => {
+    try {
+      const endpoint = `/students?search=${encodeURIComponent(query)}`;
+      const result = await apiRequest(endpoint, { method: 'GET' });
+      let data = result.data || [];
+      if (department) {
+        data = data.filter((s) => s.department && s.department.toLowerCase().includes(department.toLowerCase()));
+      }
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(data, null, 2),
+          },
+        ],
+      };
+    } catch (err) {
+      return {
+        isError: true,
+        content: [{ type: 'text', text: `Failed to search students: ${err.message}` }],
+      };
+    }
+  }
+);
+
+// Tool 7: get_student_statistics
+server.tool(
+  'get_student_statistics',
+  'Retrieve aggregated statistics about students from MongoDB Atlas (total count, department breakdown, verified count)',
+  {},
+  async () => {
+    try {
+      const result = await apiRequest('/students/stats', { method: 'GET' });
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(result.data, null, 2),
+          },
+        ],
+      };
+    } catch (err) {
+      return {
+        isError: true,
+        content: [{ type: 'text', text: `Failed to get student statistics: ${err.message}` }],
+      };
+    }
+  }
+);
+
+// Tool 8: get_database_status
+server.tool(
+  'get_database_status',
+  'Check the MongoDB Atlas database connection health, system uptime, and memory status',
+  {},
+  async () => {
+    try {
+      const result = await apiRequest('/health', { method: 'GET' });
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(result, null, 2),
+          },
+        ],
+      };
+    } catch (err) {
+      return {
+        isError: true,
+        content: [{ type: 'text', text: `Failed to get database status: ${err.message}` }],
+      };
+    }
+  }
+);
+
+// Start server using either SSE (if PORT or --sse is provided) or stdio transport
 async function main() {
-  const transport = new StdioServerTransport();
-  await server.connect(transport);
-  console.error('[MCP Server] Student Management MCP server started running on stdio');
+  const isSSE =
+    process.argv.includes('--sse') ||
+    process.argv.includes('--http') ||
+    process.env.MCP_TRANSPORT === 'sse' ||
+    Boolean(process.env.PORT);
+
+  if (isSSE) {
+    const port = Number(process.env.PORT) || 5001;
+    const transports = new Map();
+
+    const httpServer = http.createServer(async (req, res) => {
+      // CORS headers for remote browser/web MCP clients
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+      if (req.method === 'OPTIONS') {
+        res.writeHead(204);
+        res.end();
+        return;
+      }
+
+      const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+
+      // Security: Validate Bearer token if MCP_AUTH_TOKEN is configured
+      const requiredToken = process.env.MCP_AUTH_TOKEN || process.env.MCP_API_TOKEN;
+      if (requiredToken) {
+        const authHeader = req.headers.authorization;
+        const queryToken = url.searchParams.get('token');
+        const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : queryToken;
+        if (token !== requiredToken) {
+          res.writeHead(401, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Unauthorized: Invalid or missing MCP authentication token.' }));
+          return;
+        }
+      }
+
+      if (url.pathname === '/sse' && req.method === 'GET') {
+        const transport = new SSEServerTransport('/messages', res);
+        transports.set(transport.sessionId, transport);
+        req.on('close', () => transports.delete(transport.sessionId));
+        await server.connect(transport);
+      } else if (url.pathname === '/messages' && req.method === 'POST') {
+        const sessionId = url.searchParams.get('sessionId');
+        const transport = transports.get(sessionId);
+        if (!transport) {
+          res.writeHead(404, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Session not found or expired.' }));
+          return;
+        }
+        await transport.handlePostMessage(req, res);
+      } else if (url.pathname === '/health' || url.pathname === '/') {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(
+          JSON.stringify({
+            name: 'student-management-mcp-server',
+            status: 'healthy',
+            transport: 'sse',
+            sseEndpoint: '/sse',
+            messageEndpoint: '/messages',
+            toolsCount: 8,
+            timestamp: new Date().toISOString(),
+          })
+        );
+      } else {
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Not found' }));
+      }
+    });
+
+    httpServer.listen(port, '0.0.0.0', () => {
+      console.log(`[MCP Server] Student Management MCP server running on SSE at http://0.0.0.0:${port}/sse`);
+    });
+  } else {
+    const transport = new StdioServerTransport();
+    await server.connect(transport);
+    console.error('[MCP Server] Student Management MCP server started running on stdio');
+  }
 }
 
 // Run if called directly

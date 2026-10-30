@@ -7,6 +7,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { connectDB } from './config/db.js';
 import studentRoutes from './routes/studentRoutes.js';
+import mcpRoutes from './routes/mcpRoutes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -88,14 +89,20 @@ app.use((req, res, next) => {
 // API Routes
 app.use('/api', studentRoutes);
 
+// Remote MCP Routes (Streamable HTTP / SSE)
+app.use('/mcp', mcpRoutes);
+
 // Root greeting / health check
 app.get('/', (req, res) => {
   res.json({
     message: 'Student Management System API is running',
     healthCheck: '/api/health',
+    mcpEndpoint: '/mcp/sse',
     endpoints: {
       students: '/api/students',
       stats: '/api/students/stats',
+      mcpInfo: '/mcp',
+      mcpSse: '/mcp/sse',
     },
   });
 });

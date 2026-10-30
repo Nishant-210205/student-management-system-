@@ -15,7 +15,7 @@ describe('MCP Server Tool Discovery and Execution', () => {
     mockServer = http.createServer((req, res) => {
       res.setHeader('Content-Type', 'application/json');
 
-      if (req.url === '/api/students' && req.method === 'GET') {
+      if ((req.url === '/api/students' || req.url.startsWith('/api/students?')) && req.method === 'GET') {
         res.writeHead(200);
         res.end(
           JSON.stringify({
@@ -30,6 +30,27 @@ describe('MCP Server Tool Discovery and Execution', () => {
                 contact: '1234567890',
               },
             ],
+          })
+        );
+      } else if (req.url === '/api/students/stats' && req.method === 'GET') {
+        res.writeHead(200);
+        res.end(
+          JSON.stringify({
+            success: true,
+            data: {
+              totalStudents: 1,
+              departmentCounts: { 'Computer Science': 1 },
+              emailVerifiedCount: 1,
+            },
+          })
+        );
+      } else if (req.url === '/api/health' && req.method === 'GET') {
+        res.writeHead(200);
+        res.end(
+          JSON.stringify({
+            status: 'healthy',
+            database: 'connected',
+            uptime: 100,
           })
         );
       } else if (req.url === '/api/students' && req.method === 'POST') {
@@ -120,7 +141,10 @@ describe('MCP Server Tool Discovery and Execution', () => {
     assert.ok(toolNames.includes('create_student'), 'create_student should be discoverable');
     assert.ok(toolNames.includes('update_student'), 'update_student should be discoverable');
     assert.ok(toolNames.includes('delete_student'), 'delete_student should be discoverable');
-    assert.equal(toolNames.length, 5, 'Exactly 5 student management tools should be registered');
+    assert.ok(toolNames.includes('search_students'), 'search_students should be discoverable');
+    assert.ok(toolNames.includes('get_student_statistics'), 'get_student_statistics should be discoverable');
+    assert.ok(toolNames.includes('get_database_status'), 'get_database_status should be discoverable');
+    assert.equal(toolNames.length, 8, 'Exactly 8 student management tools should be registered');
   });
 
   it('Requirement 14: MCP tool list_students executes successfully', async () => {
@@ -190,6 +214,41 @@ describe('MCP Server Tool Discovery and Execution', () => {
 
     assert.ok(!res.isError);
     assert.ok(res.content[0].text.includes('Student deleted successfully'));
+  });
+
+  it('MCP tool search_students executes successfully', async () => {
+    const res = await client.callTool({
+      name: 'search_students',
+      arguments: { query: 'Test' },
+    });
+
+    assert.ok(!res.isError);
+    const output = JSON.parse(res.content[0].text);
+    assert.equal(output.length, 1);
+    assert.equal(output[0].studentId, 'STU999');
+  });
+
+  it('MCP tool get_student_statistics executes successfully', async () => {
+    const res = await client.callTool({
+      name: 'get_student_statistics',
+      arguments: {},
+    });
+
+    assert.ok(!res.isError);
+    const output = JSON.parse(res.content[0].text);
+    assert.equal(output.totalStudents, 1);
+  });
+
+  it('MCP tool get_database_status executes successfully', async () => {
+    const res = await client.callTool({
+      name: 'get_database_status',
+      arguments: {},
+    });
+
+    assert.ok(!res.isError);
+    const output = JSON.parse(res.content[0].text);
+    assert.equal(output.status, 'healthy');
+    assert.equal(output.database, 'connected');
   });
 
   it('Requirement 3: MCP tools validate input strictly', async () => {

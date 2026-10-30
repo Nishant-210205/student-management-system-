@@ -121,6 +121,16 @@ describe('Backend API & Validation Test Suite', () => {
       assert.equal(res.status, 200);
       const data = await res.json();
       assert.ok(data.message.includes('Student Management System'));
+      assert.equal(data.mcpEndpoint, '/mcp/sse');
+    });
+
+    it('GET /mcp responds with MCP metadata and tool discovery info', async () => {
+      const res = await fetch(`${baseUrl}/mcp`);
+      assert.equal(res.status, 200);
+      const data = await res.json();
+      assert.equal(data.name, 'student-management-cloud-mcp');
+      assert.equal(data.tools.length, 8);
+      assert.equal(data.endpoints.sse, '/mcp/sse');
     });
 
     it('POST /api/students returns 400 for invalid data when unauthenticated (AUTH_ENABLED not true)', async () => {

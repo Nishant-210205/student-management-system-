@@ -13,6 +13,7 @@ dotenv.config();
 let connectionPromise = null;
 let retryTimeout = null;
 let lastDiagnosticMessage = null;
+let noUriPromise = null;
 
 // Safe error categorization: never outputs credentials or raw connection strings
 export const categorizeError = (err) => {
@@ -35,7 +36,7 @@ export const categorizeError = (err) => {
 };
 
 export const getMongoUri = () => {
-  const uri = process.env.MONGODB_URI || '';
+  const uri = process.env.MONGODB_URI || process.env.MONGO_URI || '';
   return uri.trim().replace(/^["']|["']$/g, '');
 };
 
@@ -43,11 +44,14 @@ export const connectDB = () => {
   const uri = getMongoUri();
 
   if (!uri) {
-    lastDiagnosticMessage = 'MONGODB_URI environment variable is missing or empty';
+    lastDiagnosticMessage = 'MONGODB_URI/MONGO_URI environment variable is missing or empty';
     if (process.env.NODE_ENV !== 'test') {
-      console.warn('[DB Warning] MONGODB_URI is not set. Database operations will fail.');
+      console.warn('[DB Warning] MONGODB_URI/MONGO_URI is not set. Database operations will fail.');
     }
-    return Promise.resolve(false);
+    if (!noUriPromise) {
+      noUriPromise = Promise.resolve(false);
+    }
+    return noUriPromise;
   }
 
   // 1. If already connected, return immediately

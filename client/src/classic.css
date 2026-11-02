@@ -1,0 +1,336 @@
+/* ==========================================================================
+   Classic Theme — serif typography, parchment & navy palette, flat bordered
+   surfaces. Loaded last (see main.jsx) so it overrides App.css / index.css.
+   ========================================================================== */
+
+:root {
+  /* Palette: parchment, ink, navy, burgundy */
+  --fb-bg: #f3eee3;
+  --fb-surface: #fffdf8;
+  --fb-surface-elevated: #fffdf8;
+  --fb-surface-hover: #ede6d6;
+  --fb-surface-active: #e2d9c4;
+
+  --fb-primary: #1f3a5f;
+  --fb-primary-hover: #172d4a;
+  --fb-primary-active: #10213a;
+  --fb-primary-light: #e8ecf1;
+  --fb-primary-border: #b9c4d3;
+  --fb-primary-text: #1f3a5f;
+
+  --fb-text-primary: #2a2520;
+  --fb-text-secondary: #5c5348;
+  --fb-text-muted: #85796a;
+  --fb-text-inverse: #fffdf8;
+
+  --fb-border: #cfc4ae;
+  --fb-border-light: #ddd3bf;
+  --fb-border-focus: #7b2d26;
+
+  --fb-success: #3f6b4a;
+  --fb-success-light: #e6eee6;
+  --fb-success-text: #2f5237;
+
+  --fb-danger: #8c2f2f;
+  --fb-danger-hover: #732424;
+  --fb-danger-light: #f3e3df;
+  --fb-danger-text: #7a2424;
+
+  --fb-warning: #a9741f;
+  --fb-warning-light: #f5ead2;
+  --fb-warning-text: #7a5212;
+
+  /* Squarer, more formal corners */
+  --fb-radius-sm: 2px;
+  --fb-radius-md: 3px;
+  --fb-radius-lg: 4px;
+  --fb-radius-xl: 6px;
+  --fb-radius-full: 2px;
+
+  /* Quiet shadows */
+  --fb-shadow-sm: none;
+  --fb-shadow-card: none;
+  --fb-shadow-elevated: 0 2px 6px rgba(42, 37, 32, 0.12);
+  --fb-shadow-modal: 0 8px 24px rgba(42, 37, 32, 0.25);
+
+  --font-sans: 'Lora', Georgia, 'Times New Roman', serif;
+  --font-display: 'Playfair Display', Georgia, 'Times New Roman', serif;
+}
+
+[data-theme='dark'] {
+  --fb-bg: #1b1915;
+  --fb-surface: #25221d;
+  --fb-surface-elevated: #25221d;
+  --fb-surface-hover: #302c25;
+  --fb-surface-active: #3b362d;
+
+  --fb-primary: #c9a96a;
+  --fb-primary-hover: #d6ba82;
+  --fb-primary-active: #b8955a;
+  --fb-primary-light: #34301f;
+  --fb-primary-border: #5b4f2f;
+  --fb-primary-text: #d9bd85;
+
+  --fb-text-primary: #ece4d4;
+  --fb-text-secondary: #bdb2a0;
+  --fb-text-muted: #968b79;
+  --fb-text-inverse: #1b1915;
+
+  --fb-border: #463f33;
+  --fb-border-light: #38332a;
+  --fb-border-focus: #c9a96a;
+
+  --fb-success: #7fa98a;
+  --fb-success-light: #1f2c22;
+  --fb-success-text: #9cc4a6;
+
+  --fb-danger: #c0504d;
+  --fb-danger-hover: #d06461;
+  --fb-danger-light: #3a2220;
+  --fb-danger-text: #e39a96;
+
+  --fb-warning: #c9964a;
+  --fb-warning-light: #3a2e18;
+  --fb-warning-text: #e0bb7d;
+
+  --fb-shadow-elevated: 0 2px 6px rgba(0, 0, 0, 0.45);
+  --fb-shadow-modal: 0 8px 24px rgba(0, 0, 0, 0.6);
+}
+
+/* ---------- Base typography ---------- */
+
+html {
+  font-size: 16px;
+}
+
+body {
+  font-family: var(--font-sans);
+  line-height: 1.55;
+}
+
+::selection {
+  background: var(--fb-primary);
+  color: var(--fb-text-inverse);
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+.fb-brand-name,
+.post-author-name,
+.modal-title,
+.right-card-title,
+.empty-state-title,
+.quick-stat-value,
+.mobile-card-name,
+.dropdown-header strong,
+.profile-name {
+  font-family: var(--font-display);
+}
+
+/* ---------- Brand & flat (non-gradient) accents ---------- */
+
+.fb-brand-name {
+  background: none;
+  -webkit-background-clip: initial;
+  background-clip: initial;
+  -webkit-text-fill-color: currentColor;
+  color: var(--fb-primary);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.fb-brand-icon,
+.fb-admin-avatar,
+.fb-profile-avatar,
+.composer-avatar,
+.all-depts-ring,
+.mobile-fab-btn,
+.story-ring-wrapper {
+  background: var(--fb-primary);
+  color: var(--fb-text-inverse);
+  box-shadow: none;
+}
+
+.fb-brand-icon,
+.fb-admin-avatar,
+.fb-profile-avatar,
+.composer-avatar,
+.mobile-fab-btn,
+.story-ring-wrapper,
+.story-ring,
+.post-avatar,
+.recent-avatar,
+.nav-icon-wrapper,
+.quick-stat-icon,
+.confirm-warning-icon {
+  border-radius: 50%;
+}
+
+.story-ring {
+  color: var(--fb-text-inverse);
+}
+
+/* Mute the per-department colours applied inline */
+.post-avatar,
+.recent-avatar,
+.mini-chart-bar,
+.nav-icon-wrapper,
+.quick-stat-icon {
+  filter: saturate(0.5) brightness(0.92);
+}
+
+.post-avatar {
+  box-shadow: none;
+}
+
+/* ---------- Navbar: double rule, quiet ---------- */
+
+.fb-navbar {
+  border-bottom: 3px double var(--fb-border);
+  box-shadow: none;
+}
+
+.fb-nav-tab.active {
+  color: var(--fb-primary);
+}
+
+.tab-underline {
+  background-color: var(--fb-border-focus);
+}
+
+.fb-search-pill:focus-within,
+.form-field input:focus {
+  box-shadow: 0 0 0 2px var(--fb-primary-border);
+}
+
+/* ---------- Flat, bordered surfaces ---------- */
+
+.fb-post-card,
+.fb-right-card,
+.fb-composer-card,
+.fb-filter-bar,
+.fb-story-card,
+.fb-sidebar-profile,
+.table-card,
+.empty-state,
+.modal-dialog,
+.fb-user-dropdown,
+.post-menu-dropdown {
+  box-shadow: none;
+  border: 1px solid var(--fb-border);
+}
+
+.modal-dialog,
+.fb-user-dropdown,
+.post-menu-dropdown {
+  box-shadow: var(--fb-shadow-modal);
+}
+
+.fb-post-card:hover {
+  box-shadow: var(--fb-shadow-elevated);
+}
+
+.fb-story-card:hover {
+  transform: none;
+  box-shadow: var(--fb-shadow-elevated);
+}
+
+.fb-story-card.active {
+  box-shadow: 0 0 0 1px var(--fb-primary);
+}
+
+.modal-backdrop,
+.mobile-drawer-backdrop {
+  backdrop-filter: none;
+}
+
+.modal-header {
+  border-bottom: 3px double var(--fb-border);
+}
+
+/* ---------- Buttons ---------- */
+
+.fb-add-btn,
+.btn-primary,
+.view-toggle-btn.active {
+  background-color: var(--fb-primary);
+  color: var(--fb-text-inverse);
+  box-shadow: none;
+  letter-spacing: 0.02em;
+}
+
+.fb-add-btn:hover,
+.btn-primary:hover:not(:disabled) {
+  background-color: var(--fb-primary-hover);
+}
+
+.btn-danger {
+  letter-spacing: 0.02em;
+}
+
+.fb-pulse-dot {
+  animation: none;
+}
+
+/* ---------- Icon tints: navy instead of bright blue ---------- */
+
+.home-icon,
+.users-bg {
+  background-color: var(--fb-primary-light);
+  color: var(--fb-primary);
+}
+
+/* ---------- Labels, badges, tables ---------- */
+
+.section-title,
+.quick-stat-label {
+  text-transform: none;
+  font-variant: small-caps;
+  letter-spacing: 0.08em;
+}
+
+.dept-badge,
+.dept-tag,
+.active-filter-pill {
+  background-color: var(--fb-primary-light);
+  color: var(--fb-primary-text);
+  border: 1px solid var(--fb-primary-border);
+}
+
+.student-table thead th {
+  background-color: var(--fb-surface-hover);
+  color: var(--fb-text-primary);
+  text-transform: none;
+  font-variant: small-caps;
+  font-size: 0.86rem;
+  letter-spacing: 0.08em;
+  border-bottom: 2px solid var(--fb-border);
+}
+
+.student-table tbody td {
+  border-bottom: 1px solid var(--fb-border-light);
+}
+
+.badge {
+  text-transform: none;
+  font-variant: small-caps;
+  letter-spacing: 0.06em;
+  border-radius: var(--fb-radius-sm);
+}
+
+.toast-success {
+  border-color: var(--fb-success);
+}
+
+.toast-error {
+  border-color: var(--fb-danger);
+}
+
+.fb-footer {
+  border-top: 3px double var(--fb-border);
+}
